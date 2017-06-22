@@ -107,6 +107,24 @@ public class VFSClientConnectorTestCase {
     }
 
     @Test
+    public void fileAppendTestCase() throws ClientConnectorException, IOException {
+        VFSClientConnector vfsClientConnector = new VFSClientConnector();
+        Map<String, String> propertyMap = new HashMap<>();
+        File testFile = new File("temp/test.txt");
+        OutputStream outputStream = new FileOutputStream(testFile);
+        outputStream.write("Initial text".getBytes());
+        outputStream.close();
+        String fileURI = testFile.getAbsolutePath();
+        propertyMap.put("uri", fileURI);
+        propertyMap.put("action", "write");
+        propertyMap.put("append", "true");
+        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(ByteBuffer.wrap(bytes), true);
+        vfsClientConnector.send(binaryCarbonMessage, null, propertyMap);
+        Assert.assertEquals("Initial textThis is a Sample Text".getBytes(),
+                            IOUtils.toByteArray(new FileInputStream(testFile)), "Wrong Content written to File");
+    }
+
+    @Test
     public void fileCopyTestCase() throws ClientConnectorException, IOException {
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
         Map<String, String> propertyMap = new HashMap<>();
@@ -124,7 +142,9 @@ public class VFSClientConnectorTestCase {
         Assert.assertEquals(bytes, IOUtils.toByteArray(new FileInputStream(destFile)), "Wrong Content copied to File");
     }
 
-    @Test(expectedExceptions = ClientConnectorException.class)
+    @Test(expectedExceptions = ClientConnectorException.class,
+            expectedExceptionsMessageRegExp = ".*Exception occurred while processing file: failed to copy file: file " +
+                                              "not found:.*")
     public void copyNonExistentFile()
             throws ClientConnectorException, IOException {
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
@@ -179,7 +199,9 @@ public class VFSClientConnectorTestCase {
                             "Wrong Content in moved to File");
     }
 
-    @Test(expectedExceptions = ClientConnectorException.class)
+    @Test(expectedExceptions = ClientConnectorException.class,
+            expectedExceptionsMessageRegExp = ".*Exception occurred while processing file: failed to move file: file " +
+                                              "not found:.*")
     public void moveNonExistentFile()
             throws ClientConnectorException, IOException {
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
@@ -227,7 +249,9 @@ public class VFSClientConnectorTestCase {
         Assert.assertFalse(testFile.exists(), "File not Deleted");
     }
 
-    @Test(expectedExceptions = ClientConnectorException.class)
+    @Test(expectedExceptions = ClientConnectorException.class,
+            expectedExceptionsMessageRegExp = ".*Exception occurred while processing file: failed to delete file:" +
+                                              " file not found:.*")
     public void deleteNonExistentFile()
             throws ClientConnectorException, IOException {
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
@@ -270,7 +294,9 @@ public class VFSClientConnectorTestCase {
                             "Wrong Content written to File");
     }
 
-    @Test(expectedExceptions = ClientConnectorException.class)
+    @Test(expectedExceptions = ClientConnectorException.class,
+            expectedExceptionsMessageRegExp = ".*Exception occurred while processing file: failed to read file: file " +
+                                              "not found:.*")
     public void readNonExistentFile()
             throws ClientConnectorException, IOException {
         VFSClientConnector vfsClientConnector = new VFSClientConnector();
